@@ -1,11 +1,29 @@
 [
   {
-    "id": "sardine_atlantic_canned_oil",
-    "name": "정어리(대서양), 기름 통조림, 뼈 포함, 기름 뺀 고형분",
-    "state": "통조림 · 기름 뺀 고형분",
-    "epa_mg_per_100g": 473.0,
-    "dha_mg_per_100g": 509.0,
-    "source": "USDA FoodData Central, SR Legacy, FDC ID 175139",
-    "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/175139/nutrients"
+    "id": "sardine_water_no_added_salt",
+    "name": "정어리 통조림 · 물에 든 무염 제품",
+    "state": "물 통조림 · 소금 무첨가 제품 선택",
+    "epa_mg_per_100g": 532.0,
+    "dha_mg_per_100g": 864.0,
+    "source": "USDA FoodData Central · FNDDS의 water-packed, skinless, boneless sardines 항목",
+    "source_url": "https://fdc.nal.usda.gov/food-search/?query=sardines%20skinless%20boneless%20packed%20in%20water"
+  },
+  {
+    "id": "mackerel_raw",
+    "name": "생고등어",
+    "state": "생것",
+    "epa_mg_per_100g": 654.0,
+    "dha_mg_per_100g": 2059.0,
+    "source": "식품의약품안전처 국가표준식품성분표",
+    "source_url": "https://various.foodsafetykorea.go.kr/nutrient/"
+  },
+  {
+    "id": "mackerel_cooked",
+    "name": "익힌 고등어",
+    "state": "익힌 것",
+    "epa_mg_per_100g": 930.0,
+    "dha_mg_per_100g": 1400.0,
+    "source": "식품의약품안전처 국가표준식품성분표",
+    "source_url": "https://various.foodsafetykorea.go.kr/nutrient/"
   }
 ]

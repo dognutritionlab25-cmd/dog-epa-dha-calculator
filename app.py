@@ -1,150 +1,120 @@
 import json
 from pathlib import Path
-
 import streamlit as st
 
 st.set_page_config(page_title="EPA+DHA 주간 급여량 계산기", page_icon="🐾", layout="centered")
-
-DATA_PATH = Path(__file__).with_name("food_data.json")
-FOODS = json.loads(DATA_PATH.read_text(encoding="utf-8"))
+BASE_DIR = Path(__file__).parent
+FOODS = json.loads((BASE_DIR / "food_data.json").read_text(encoding="utf-8"))
 DAYS = ["월", "화", "수", "목", "금", "토", "일"]
 
 
-def num(value):
-    return 0.0 if value is None else float(value)
-
-
-def safe_number(label, value=0.0, step=1.0, min_value=0.0, key=None, help=None):
-    return st.number_input(label, min_value=min_value, value=value, step=step, key=key, help=help)
-
-
-def mg_from_food(epa_100, dha_100, grams):
-    return (num(epa_100) + num(dha_100)) * num(grams) / 100
+def food_mg(epa, dha, grams):
+    return (float(epa) + float(dha)) * float(grams) / 100
 
 
 def main():
-    st.title("🐾 EPA+DHA 주간 급여량 계산기")
-    st.caption("반려견영양연구소 교육용 계산기 · 건강한 성견의 유지 목적")
-    st.info("NRC 성견 유지 기준을 계산합니다. 질환, 임신·수유, 약물 복용 또는 치료 목적의 급여는 개별 판단이 필요합니다.")
-
-    with st.expander("기준과 해석", expanded=False):
-        st.markdown("""
-        - 하루 유지 권장량: **30 × 체중(kg)^0.75 mg**
-        - 주간 유지 목표: 하루 권장량 × 7
+    st.markdown("""<style>
+    .block-container {max-width: 760px; padding-top: 1.25rem; padding-bottom: 4rem;}
+    h2 {padding-top: 1.2rem;} div[data-testid="stMetric"] {background:#f7f4ef;border-radius:12px;padding:12px;}
+    .small-note {color:#6c6257;font-size:.9rem;}</style>""", unsafe_allow_html=True)
+    st.image(str(BASE_DIR / "assets" / "dog-nutrition-lab-logo.png"), width=500)
+    st.title("EPA+DHA 주간 급여량 계산기")
+    st.caption("반려견영양연구소 · 건강한 성견의 유지 목적 교육용 계산기")
+    st.info("체중, 일주일 동안 먹이는 생선, 피시오일을 차례로 입력하면 주간 총량을 계산합니다.")
+    with st.expander("이 계산기의 기준"):
+        st.markdown("""- 하루 유지 목표: **30 × 체중(kg)^0.75 mg**
+        - 주간 유지 목표: 하루 유지 목표 × 7
         - 대사체중 기준 안전 상한: **370 × 체중(kg)^0.75 mg/일**
         - 열량 기준 안전 상한: **2.8 × 하루 섭취 kcal mg/일**
 
-        두 상한은 각각 참고값입니다. 낮은 값을 임의로 NRC의 단일 공식 상한으로 합치지 않습니다. 상한 초과는 곧바로 독성 발생을 뜻하지 않습니다.
-        """)
+        두 안전 상한은 서로 다른 참고 기준이므로 따로 보여 드립니다. 상한을 넘었다고 바로 독성이 생긴다는 뜻은 아닙니다.""")
 
-    st.subheader("1. 아이 정보")
-    c1, c2 = st.columns(2)
-    weight = c1.number_input("체중 (kg)", min_value=0.0, value=4.0, step=0.1)
-    kcal = c2.number_input("하루 섭취 열량 (kcal, 선택)", min_value=0.0, value=0.0, step=1.0,
-                           help="입력하면 열량 기준 안전 상한을 함께 계산합니다.")
+    st.header("1. 아이 정보")
+    left, right = st.columns(2)
+    weight = left.number_input("체중 (kg)", min_value=0.0, value=4.0, step=0.1)
+    kcal = right.number_input("하루 먹는 열량 (kcal, 선택)", min_value=0.0, value=0.0, step=1.0)
     if weight <= 0:
-        st.error("체중은 0보다 커야 합니다.")
+        st.error("체중은 0보다 커야 계산할 수 있습니다.")
         return
-    metabolic_weight = weight ** 0.75
-    daily_target = 30 * metabolic_weight
-    weekly_target = daily_target * 7
-    metabolic_cap = 370 * metabolic_weight
+    mw = weight ** .75
+    daily_target, weekly_target, metabolic_cap = 30 * mw, 30 * mw * 7, 370 * mw
     kcal_cap = 2.8 * kcal if kcal > 0 else None
 
-    st.subheader("2. 식품 섭취")
-    food_mode = st.radio("식품 데이터 입력 방식", ["등록 식품 선택", "EPA·DHA 직접 입력"], horizontal=True)
-    selected_food = None
-    food_epa = food_dha = 0.0
-    if food_mode == "등록 식품 선택":
-        labels = [f'{f["name"]} — EPA+DHA {f["epa_mg_per_100g"] + f["dha_mg_per_100g"]:.0f}mg/100g' for f in FOODS]
-        choice = st.selectbox("생선·어패류 종류와 상태", labels)
-        selected_food = FOODS[labels.index(choice)]
-        food_epa, food_dha = selected_food["epa_mg_per_100g"], selected_food["dha_mg_per_100g"]
-        st.caption(f'출처: [{selected_food["source"]}]({selected_food["source_url"]})')
-    else:
-        st.caption("제품 라벨 또는 확인 가능한 식품성분 자료의 100g당 값으로 직접 입력하세요.")
+    st.header("2. 일주일 동안 먹이는 생선")
+    st.caption("기름 통조림은 목록에서 제외했습니다. 정어리는 **물에 든 무염 제품**을 고르세요.")
+    labels = [f'{f["name"]} · EPA+DHA {f["epa_mg_per_100g"] + f["dha_mg_per_100g"]:.0f}mg/100g' for f in FOODS]
+    selected = st.selectbox("생선 종류", labels)
+    food = FOODS[labels.index(selected)]
+    c1, c2, c3 = st.columns(3)
+    c1.metric("EPA", f'{food["epa_mg_per_100g"]:.0f} mg')
+    c2.metric("DHA", f'{food["dha_mg_per_100g"]:.0f} mg')
+    c3.metric("합계 · 100g당", f'{food["epa_mg_per_100g"] + food["dha_mg_per_100g"]:.0f} mg')
+    st.markdown(f'<div class="small-note">상태: {food["state"]} · 출처: <a href="{food["source_url"]}" target="_blank">{food["source"]}</a></div>', unsafe_allow_html=True)
+    grams = st.number_input("한 번에 먹이는 양 (g)", min_value=0.0, value=0.0, step=1.0)
+    food_days = st.multiselect("먹이는 요일", DAYS, placeholder="예: 화요일, 토요일")
+    fish_once = food_mg(food["epa_mg_per_100g"], food["dha_mg_per_100g"], grams)
+    st.caption(f"이 생선을 한 번 {grams:.0f}g 먹이면 EPA+DHA는 {fish_once:.2f}mg입니다.")
+
+    with st.expander("목록에 없는 생선·어패류라면 직접 입력"):
+        st.caption("라벨 또는 확인한 식품성분표의 100g당 수치를 입력하세요. 추정값은 넣지 마세요.")
         a, b = st.columns(2)
-        food_epa = a.number_input("100g당 EPA (mg)", min_value=0.0, value=0.0, step=1.0)
-        food_dha = b.number_input("100g당 DHA (mg)", min_value=0.0, value=0.0, step=1.0)
-    food_grams = st.number_input("1회 급여 중량 (g)", min_value=0.0, value=0.0, step=1.0)
-    food_days = st.multiselect("식품 급여 요일", DAYS, default=[])
-    food_once = mg_from_food(food_epa, food_dha, food_grams)
+        manual_epa = a.number_input("100g당 EPA (mg)", min_value=0.0, value=0.0, step=1.0)
+        manual_dha = b.number_input("100g당 DHA (mg)", min_value=0.0, value=0.0, step=1.0)
+        manual_grams = st.number_input("한 번에 먹이는 양 (g)", min_value=0.0, value=0.0, step=1.0, key="manual_grams")
+        manual_days = st.multiselect("먹이는 요일", DAYS, key="manual_days", placeholder="직접 입력한 식품의 요일")
+        manual_once = food_mg(manual_epa, manual_dha, manual_grams)
 
-    st.subheader("3. 피시오일·기존 보충제")
-    st.caption("피시오일 전체 무게가 아니라, 라벨의 EPA와 DHA 함량만 입력합니다.")
+    st.header("3. 피시오일 또는 기존 보충제")
+    st.caption("병 전체의 기름 무게가 아니라, 제품 라벨에 적힌 EPA와 DHA만 입력하세요.")
     p1, p2 = st.columns(2)
-    product_epa = p1.number_input("제품 표시 기준 EPA (mg)", min_value=0.0, value=0.0, step=1.0)
-    product_dha = p2.number_input("제품 표시 기준 DHA (mg)", min_value=0.0, value=0.0, step=1.0)
-    unit_type = st.selectbox("제품 표시 기준", ["1mL", "5mL", "1캡슐", "기타 단위"])
+    product_epa = p1.number_input("라벨의 EPA (mg)", min_value=0.0, value=0.0, step=1.0)
+    product_dha = p2.number_input("라벨의 DHA (mg)", min_value=0.0, value=0.0, step=1.0)
+    label_unit = st.selectbox("위 EPA·DHA가 표시된 기준", ["1mL", "5mL", "1캡슐", "기타 단위"])
     label_total = product_epa + product_dha
-    if unit_type == "1mL":
-        dose_label, product_per_dose = "mL", label_total
-        st.caption(f"1mL당 EPA+DHA: {product_per_dose:.2f}mg")
-    elif unit_type == "5mL":
-        dose_label, product_per_dose = "mL", label_total / 5
-        st.caption(f"1mL당 EPA+DHA: {product_per_dose:.2f}mg (5mL 표시값 ÷ 5)")
-    elif unit_type == "1캡슐":
-        dose_label, product_per_dose = "캡슐", label_total
-        st.caption(f"1캡슐당 EPA+DHA: {product_per_dose:.2f}mg · 캡슐은 분할하지 않는 것으로 계산합니다.")
+    if label_unit == "1mL":
+        dose_unit, mg_per_dose = "mL", label_total
+    elif label_unit == "5mL":
+        dose_unit, mg_per_dose = "mL", label_total / 5
+    elif label_unit == "1캡슐":
+        dose_unit, mg_per_dose = "캡슐", label_total
     else:
-        unit_label = st.text_input("표시 단위 이름", value="1회 제공량")
-        dose_label, product_per_dose = unit_label, label_total
-    supplement_amount = st.number_input(f"실제 1회 급여량 ({dose_label})", min_value=0.0, value=0.0, step=0.1)
-    supplement_days = st.multiselect("보충제 급여 요일", DAYS, default=[])
-    supplement_once = product_per_dose * supplement_amount
-    if product_per_dose == 0 and supplement_amount > 0:
-        st.warning("보충제 급여량이 입력되었지만 EPA+DHA 함량이 0입니다. 라벨 수치를 확인해 주세요.")
+        dose_unit, mg_per_dose = st.text_input("단위 이름", value="1회 제공량"), label_total
+    if label_total > 0:
+        st.success(f"실제 {dose_unit} 1단위당 EPA+DHA는 {mg_per_dose:.2f}mg입니다.")
+    dose_amount = st.number_input(f"한 번에 주는 양 ({dose_unit})", min_value=0.0, value=0.0, step=0.1)
+    supplement_days = st.multiselect("보충제를 주는 요일", DAYS, placeholder="예: 월요일, 목요일")
+    supplement_once = mg_per_dose * dose_amount
 
-    st.subheader("4. 주간 결과")
-    food_weekly = food_once * len(food_days)
+    food_weekly = fish_once * len(food_days) + manual_once * len(manual_days)
     supplement_weekly = supplement_once * len(supplement_days)
     planned_weekly = food_weekly + supplement_weekly
-    extra_needed = max(0.0, weekly_target - food_weekly - supplement_weekly)
-    planned_daily_average = planned_weekly / 7
-    difference = planned_weekly - weekly_target
-    product_per_unit = product_per_dose
+    extra_needed = max(0.0, weekly_target - planned_weekly)
 
+    st.header("4. 계산 결과")
     r1, r2 = st.columns(2)
-    r1.metric("하루 NRC 유지 권장량", f"{daily_target:.2f} mg")
-    r2.metric("주간 NRC 유지 목표", f"{weekly_target:.2f} mg")
-    r1.metric("주간 식품 섭취", f"{food_weekly:.2f} mg")
-    r2.metric("주간 기존 보충제 섭취", f"{supplement_weekly:.2f} mg")
-    r1.metric("추가 보충 필요량", f"{extra_needed:.2f} mg")
-    if product_per_unit > 0:
-        additional_units = extra_needed / product_per_unit
-        suffix = dose_label
-        r2.metric(f"제품 기준 추가 필요 {suffix}", f"{additional_units:.3f} {suffix}")
-    else:
-        r2.metric("제품 기준 추가 필요량", "제품 함량 입력 필요")
-    r1.metric("실제 계획 주간 총섭취량", f"{planned_weekly:.2f} mg")
-    r2.metric("하루 평균 섭취량", f"{planned_daily_average:.2f} mg")
-    st.metric("주간 목표 대비 차이", f"{difference:+.2f} mg")
+    r1.metric("하루 유지 목표", f"{daily_target:.2f} mg")
+    r2.metric("일주일 유지 목표", f"{weekly_target:.2f} mg")
+    r1.metric("일주일 생선 섭취량", f"{food_weekly:.2f} mg")
+    r2.metric("일주일 보충제 섭취량", f"{supplement_weekly:.2f} mg")
+    r1.metric("실제 일주일 총섭취량", f"{planned_weekly:.2f} mg")
+    r2.metric("목표까지 추가로 필요한 양", f"{extra_needed:.2f} mg")
+    if mg_per_dose > 0:
+        r1.metric(f"현재 제품으로 추가 필요 {dose_unit}", f"{extra_needed / mg_per_dose:.3f} {dose_unit}")
+    r2.metric("하루 평균 섭취량", f"{planned_weekly / 7:.2f} mg")
+    st.metric("주간 목표와의 차이", f"{planned_weekly - weekly_target:+.2f} mg")
 
-    st.subheader("5. 요일별 확인")
+    st.subheader("요일별 확인")
     rows = []
     for day in DAYS:
-        f = food_once if day in food_days else 0.0
-        s = supplement_once if day in supplement_days else 0.0
-        total = f + s
-        meta_note = "초과" if total > metabolic_cap else "이내"
-        kcal_note = "입력 없음" if kcal_cap is None else ("초과" if total > kcal_cap else "이내")
-        rows.append({"요일": day, "식품 (mg)": round(f, 2), "보충제 (mg)": round(s, 2), "합계 (mg)": round(total, 2),
-                     f"대사체중 상한 {metabolic_cap:.2f}mg": meta_note,
-                     f"열량 상한 {kcal_cap:.2f}mg" if kcal_cap is not None else "열량 기준": kcal_note})
+        fish_today = (fish_once if day in food_days else 0) + (manual_once if day in manual_days else 0)
+        supplement_today = supplement_once if day in supplement_days else 0
+        total = fish_today + supplement_today
+        rows.append({"요일":day, "생선 (mg)":round(fish_today,2), "보충제 (mg)":round(supplement_today,2), "하루 합계 (mg)":round(total,2), "대사체중 기준":"초과" if total > metabolic_cap else "이내", "열량 기준":"입력 없음" if kcal_cap is None else ("초과" if total > kcal_cap else "이내")})
     st.dataframe(rows, use_container_width=True, hide_index=True)
-    st.caption("주간 총량이 같더라도 급여 간격에 따른 효과가 동일하다고 단정할 수 없습니다. 이 계산기는 특정 급여 횟수를 의학적 권장사항으로 제시하지 않습니다.")
-
-    st.subheader("안전 상한 참고")
-    cap1, cap2 = st.columns(2)
-    cap1.metric("대사체중 기준 안전 상한", f"{metabolic_cap:.2f} mg/일")
-    cap2.metric("열량 기준 안전 상한", "하루 열량을 입력해 주세요" if kcal_cap is None else f"{kcal_cap:.2f} mg/일")
-
-    with st.expander("등록 식품 데이터와 한계"):
-        st.markdown("""
-        현재 등록 식품은 출처와 상태를 특정할 수 있는 항목만 포함합니다. 같은 생선이라도 종, 원산지, 생것·익힌 것·통조림 상태, 기름과 고형분의 처리에 따라 값이 달라질 수 있습니다.
-        
-        목록에 없는 식품은 추정값을 만들지 않고 **직접 입력**을 사용하도록 했습니다. 식품 데이터는 `food_data.json`에서 코드와 분리되어 있어, 검증한 항목을 추가할 수 있습니다.
-        """)
+    st.caption("주간 총량이 같더라도 급여 간격의 효과가 같다고 단정할 수 없습니다. 이 계산기는 특정 횟수를 의학적 권장사항처럼 제시하지 않습니다.")
+    a, b = st.columns(2)
+    a.metric("대사체중 기준 안전 상한", f"{metabolic_cap:.2f} mg/일")
+    b.metric("열량 기준 안전 상한", "하루 열량을 입력해 주세요" if kcal_cap is None else f"{kcal_cap:.2f} mg/일")
 
 
 if __name__ == "__main__":
