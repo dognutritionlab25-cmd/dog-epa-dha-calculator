@@ -14,9 +14,16 @@ def food_mg(epa, dha, grams):
 
 def main():
     st.markdown("""<style>
-    .block-container {max-width: 760px; padding-top: 1.25rem; padding-bottom: 4rem;}
-    h2 {padding-top: 1.2rem;} div[data-testid="stMetric"] {background:#f7f4ef;border-radius:12px;padding:12px;}
-    .small-note {color:#6c6257;font-size:.9rem;}</style>""", unsafe_allow_html=True)
+    .stApp {background:#fbf5e9;}
+    .block-container {max-width:760px;padding-top:1.25rem;padding-bottom:4rem;}
+    h2 {padding-top:1.2rem;border-top:4px solid #6b9442;margin-top:1.6rem;}
+    div[data-testid="stMetric"] {background:#f7f2e9;border-radius:12px;padding:12px;}
+    .small-note {color:#6c6257;font-size:.9rem;}
+    .result-callout {background:#f4ead7;border:3px solid #6b9442;border-radius:16px;padding:20px 22px;margin:14px 0 22px;}
+    .result-callout .eyebrow {font-size:.95rem;font-weight:700;color:#496b2d;margin-bottom:5px;}
+    .result-callout .amount {font-size:2rem;font-weight:800;color:#24451f;line-height:1.15;margin:3px 0 9px;}
+    .result-callout .explanation {font-size:1.05rem;font-weight:650;color:#30352a;line-height:1.6;}
+    </style>""", unsafe_allow_html=True)
     st.image(str(BASE_DIR / "assets" / "dog-nutrition-lab-logo.png"), width=500)
     st.title("EPA+DHA 주간 급여량 계산기")
     st.caption("반려견영양연구소 · 건강한 성견의 유지 목적 교육용 계산기")
@@ -91,6 +98,19 @@ def main():
     extra_needed = max(0.0, weekly_target - planned_weekly)
 
     st.header("4. 계산 결과")
+    if extra_needed > 0:
+        if mg_per_dose > 0:
+            callout_amount = f"추가로 {extra_needed:.2f}mg · {extra_needed / mg_per_dose:.3f}{dose_unit}"
+            callout_text = f"이번 주 계획만으로는 유지 목표보다 {extra_needed:.2f}mg 부족합니다. 현재 입력한 제품이라면 위 양을 더해야 주간 유지 목표에 닿습니다."
+        else:
+            callout_amount = f"추가로 {extra_needed:.2f}mg 필요"
+            callout_text = "이번 주 계획만으로는 유지 목표에 부족합니다. 피시오일 제품의 EPA와 DHA 함량을 입력하면 필요한 실제 급여량도 확인할 수 있습니다."
+        callout_title = "이번 주, 추가 보충이 필요합니다"
+    else:
+        callout_amount = "추가 보충 0mg"
+        callout_title = "이번 주 계획으로 유지 목표를 채웠습니다"
+        callout_text = "입력한 생선과 기존 보충제의 주간 합계가 유지 목표 이상입니다. 그래서 계산상 추가 보충은 필요하지 않습니다."
+    st.markdown(f'''<div class="result-callout"><div class="eyebrow">{callout_title}</div><div class="amount">{callout_amount}</div><div class="explanation">{callout_text}</div></div>''', unsafe_allow_html=True)
     r1, r2 = st.columns(2)
     r1.metric("하루 유지 목표", f"{daily_target:.2f} mg")
     r2.metric("일주일 유지 목표", f"{weekly_target:.2f} mg")
