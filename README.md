@@ -11,6 +11,8 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
+배포 환경은 Python 3.12를 사용합니다.
+
 Railway 시작 명령:
 
 ```bash
