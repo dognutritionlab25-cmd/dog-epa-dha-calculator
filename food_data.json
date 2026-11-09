@@ -1,0 +1,11 @@
+[
+  {
+    "id": "sardine_atlantic_canned_oil",
+    "name": "정어리(대서양), 기름 통조림, 뼈 포함, 기름 뺀 고형분",
+    "state": "통조림 · 기름 뺀 고형분",
+    "epa_mg_per_100g": 473.0,
+    "dha_mg_per_100g": 509.0,
+    "source": "USDA FoodData Central, SR Legacy, FDC ID 175139",
+    "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/175139/nutrients"
+  }
+]
