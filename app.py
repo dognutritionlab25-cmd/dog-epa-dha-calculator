@@ -1,4 +1,5 @@
 import json
+import base64
 from pathlib import Path
 import streamlit as st
 
@@ -13,28 +14,37 @@ def food_mg(epa, dha, grams):
 
 
 def main():
+    logo_b64 = base64.b64encode((BASE_DIR / "assets" / "dog-nutrition-lab-logo.png").read_bytes()).decode("ascii")
     st.markdown("""<style>
-    .stApp {background:#fbf5e9;}
-    .block-container {max-width:760px;padding-top:1.25rem;padding-bottom:4rem;}
+    .stApp {background:#fdfaf4;}
+    .block-container {max-width:760px;padding-top:0;padding-bottom:4rem;}
     h2 {padding-top:1.2rem;border-top:4px solid #6b9442;margin-top:1.6rem;}
-    div[data-testid="stMetric"] {background:#f7f2e9;border-radius:12px;padding:12px;}
+    div[data-testid="stMetric"] {background:#fffdf9;border-radius:12px;padding:12px;}
     .small-note {color:#6c6257;font-size:.9rem;}
-    .result-callout {background:#f4ead7;border:3px solid #6b9442;border-radius:16px;padding:20px 22px;margin:14px 0 22px;}
+    .brand-header {background:#fff;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);padding:20px 24px 28px;border-bottom:1px solid #f0eee9;}
+    .brand-header-inner {max-width:760px;margin:0 auto;}
+    .brand-logo {display:block;width:min(500px,100%);margin:0 0 8px 0;}
+    .header-title {font-size:2rem;font-weight:800;color:#273348;line-height:1.25;margin:0 0 6px;}
+    .header-subtitle {font-size:.9rem;color:#756d61;margin-bottom:16px;}
+    .header-note {background:#f2f5f0;border-left:4px solid #6b9442;border-radius:8px;padding:12px 14px;color:#315036;font-size:.97rem;}
+    .header-details {margin-top:14px;border:1px solid #e6e1d8;border-radius:8px;padding:9px 13px;color:#4c4a43;font-size:.9rem;}
+    .header-details summary {cursor:pointer;font-weight:650;}
+    .header-details ul {margin:9px 0 2px;padding-left:20px;}
+    .result-callout {background:#f8f0e2;border:3px solid #6b9442;border-radius:16px;padding:20px 22px;margin:14px 0 22px;}
     .result-callout .eyebrow {font-size:.95rem;font-weight:700;color:#496b2d;margin-bottom:5px;}
     .result-callout .amount {font-size:2rem;font-weight:800;color:#24451f;line-height:1.15;margin:3px 0 9px;}
     .result-callout .explanation {font-size:1.05rem;font-weight:650;color:#30352a;line-height:1.6;}
     </style>""", unsafe_allow_html=True)
-    st.image(str(BASE_DIR / "assets" / "dog-nutrition-lab-logo.png"), width=500)
-    st.title("EPA+DHA 주간 급여량 계산기")
-    st.caption("반려견영양연구소 · 건강한 성견의 유지 목적 교육용 계산기")
-    st.info("체중, 일주일 동안 먹이는 생선, 피시오일을 차례로 입력하면 주간 총량을 계산합니다.")
-    with st.expander("이 계산기의 기준"):
-        st.markdown("""- 하루 유지 목표: **30 × 체중(kg)^0.75 mg**
-        - 주간 유지 목표: 하루 유지 목표 × 7
-        - 대사체중 기준 안전 상한: **370 × 체중(kg)^0.75 mg/일**
-        - 열량 기준 안전 상한: **2.8 × 하루 섭취 kcal mg/일**
-
-        두 안전 상한은 서로 다른 참고 기준이므로 따로 보여 드립니다. 상한을 넘었다고 바로 독성이 생긴다는 뜻은 아닙니다.""")
+    st.markdown(f'''<div class="brand-header"><div class="brand-header-inner">
+      <img class="brand-logo" src="data:image/png;base64,{logo_b64}" alt="반려견영양연구소 로고">
+      <div class="header-title">EPA+DHA 주간 급여량 계산기</div>
+      <div class="header-subtitle">반려견영양연구소 · 건강한 성견의 유지 목적 교육용 계산기</div>
+      <div class="header-note">체중, 일주일 동안 먹이는 생선, 피시오일을 차례로 입력하면 주간 총량을 계산합니다.</div>
+      <details class="header-details"><summary>이 계산기의 기준</summary><ul>
+        <li>하루 유지 목표: 30 × 체중(kg)^0.75 mg</li><li>주간 유지 목표: 하루 유지 목표 × 7</li>
+        <li>대사체중 기준 안전 상한: 370 × 체중(kg)^0.75 mg/일</li><li>열량 기준 안전 상한: 2.8 × 하루 섭취 kcal mg/일</li>
+      </ul>두 안전 상한은 서로 다른 참고 기준이므로 따로 보여 드립니다.</details>
+      </div></div>''', unsafe_allow_html=True)
 
     st.header("1. 아이 정보")
     left, right = st.columns(2)
