@@ -22,7 +22,7 @@ def main():
     div[data-testid="stMetric"] {background:#fffdf9;border-radius:12px;padding:12px;}
     .small-note {color:#6c6257;font-size:.9rem;}
     .brand-header {background:#fff;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);padding:20px 24px 28px;border-bottom:1px solid #f0eee9;}
-    .brand-header-inner {max-width:760px;margin:0 auto;}
+    .brand-header-inner {max-width:728px;margin:0 auto;}
     .brand-logo {display:block;width:min(500px,100%);margin:0 0 8px 0;}
     .header-title {font-size:2rem;font-weight:800;color:#273348;line-height:1.25;margin:0 0 6px;}
     .header-subtitle {font-size:.9rem;color:#756d61;margin-bottom:16px;}
