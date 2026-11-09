@@ -27,6 +27,7 @@ def main():
     .header-title {font-size:2rem;font-weight:800;color:#273348;line-height:1.25;margin:0 0 6px;}
     .header-subtitle {font-size:.9rem;color:#756d61;margin-bottom:16px;}
     .header-note {background:#f2f5f0;border-left:4px solid #6b9442;border-radius:8px;padding:12px 14px;color:#315036;font-size:.97rem;}
+    .access-notice {margin-top:13px;color:#716a60;font-size:.78rem;line-height:1.55;}
     .header-details {margin-top:14px;border:1px solid #e6e1d8;border-radius:8px;padding:9px 13px;color:#4c4a43;font-size:.9rem;}
     .header-details summary {cursor:pointer;font-weight:650;}
     .header-details ul {margin:9px 0 2px;padding-left:20px;}
@@ -40,6 +41,7 @@ def main():
       <div class="header-title">EPA+DHA 주간 급여량 계산기</div>
       <div class="header-subtitle">반려견영양연구소 · 건강한 성견의 유지 목적 교육용 계산기</div>
       <div class="header-note">체중, 일주일 동안 먹이는 생선, 피시오일을 차례로 입력하면 주간 총량을 계산합니다.</div>
+      <div class="access-notice">© 반려견영양연구소 · 이 계산기는 「반려견을 읽다」 오디오레터 및 네이버 프리미엄 콘텐츠 구독자 전용입니다. 링크의 무단 공유·복제·재배포를 금합니다.</div>
       <details class="header-details"><summary>이 계산기의 기준</summary><ul>
         <li>하루 유지 목표: 30 × 체중(kg)^0.75 mg</li><li>주간 유지 목표: 하루 유지 목표 × 7</li>
         <li>대사체중 기준 안전 상한: 370 × 체중(kg)^0.75 mg/일</li><li>열량 기준 안전 상한: 2.8 × 하루 섭취 kcal mg/일</li>
