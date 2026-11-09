@@ -73,17 +73,26 @@ def main():
     st.subheader("3. 피시오일·기존 보충제")
     st.caption("피시오일 전체 무게가 아니라, 라벨의 EPA와 DHA 함량만 입력합니다.")
     p1, p2 = st.columns(2)
-    product_epa = p1.number_input("표시 1단위당 EPA (mg)", min_value=0.0, value=0.0, step=1.0)
-    product_dha = p2.number_input("표시 1단위당 DHA (mg)", min_value=0.0, value=0.0, step=1.0)
+    product_epa = p1.number_input("제품 표시 기준 EPA (mg)", min_value=0.0, value=0.0, step=1.0)
+    product_dha = p2.number_input("제품 표시 기준 DHA (mg)", min_value=0.0, value=0.0, step=1.0)
     unit_type = st.selectbox("제품 표시 기준", ["1mL", "5mL", "1캡슐", "기타 단위"])
-    if unit_type == "기타 단위":
-        unit_label = st.text_input("표시 단위 이름", value="1회 제공량")
+    label_total = product_epa + product_dha
+    if unit_type == "1mL":
+        dose_label, product_per_dose = "mL", label_total
+        st.caption(f"1mL당 EPA+DHA: {product_per_dose:.2f}mg")
+    elif unit_type == "5mL":
+        dose_label, product_per_dose = "mL", label_total / 5
+        st.caption(f"1mL당 EPA+DHA: {product_per_dose:.2f}mg (5mL 표시값 ÷ 5)")
+    elif unit_type == "1캡슐":
+        dose_label, product_per_dose = "캡슐", label_total
+        st.caption(f"1캡슐당 EPA+DHA: {product_per_dose:.2f}mg · 캡슐은 분할하지 않는 것으로 계산합니다.")
     else:
-        unit_label = unit_type
-    supplement_amount = st.number_input(f"급여량 ({unit_label} 기준 단위 수)", min_value=0.0, value=0.0, step=0.1)
+        unit_label = st.text_input("표시 단위 이름", value="1회 제공량")
+        dose_label, product_per_dose = unit_label, label_total
+    supplement_amount = st.number_input(f"실제 1회 급여량 ({dose_label})", min_value=0.0, value=0.0, step=0.1)
     supplement_days = st.multiselect("보충제 급여 요일", DAYS, default=[])
-    supplement_once = (product_epa + product_dha) * supplement_amount
-    if product_epa + product_dha == 0 and supplement_amount > 0:
+    supplement_once = product_per_dose * supplement_amount
+    if product_per_dose == 0 and supplement_amount > 0:
         st.warning("보충제 급여량이 입력되었지만 EPA+DHA 함량이 0입니다. 라벨 수치를 확인해 주세요.")
 
     st.subheader("4. 주간 결과")
@@ -93,7 +102,7 @@ def main():
     extra_needed = max(0.0, weekly_target - food_weekly - supplement_weekly)
     planned_daily_average = planned_weekly / 7
     difference = planned_weekly - weekly_target
-    product_per_unit = product_epa + product_dha
+    product_per_unit = product_per_dose
 
     r1, r2 = st.columns(2)
     r1.metric("하루 NRC 유지 권장량", f"{daily_target:.2f} mg")
@@ -103,7 +112,7 @@ def main():
     r1.metric("추가 보충 필요량", f"{extra_needed:.2f} mg")
     if product_per_unit > 0:
         additional_units = extra_needed / product_per_unit
-        suffix = "mL" if unit_type in ["1mL", "5mL"] else "캡슐" if unit_type == "1캡슐" else unit_label
+        suffix = dose_label
         r2.metric(f"제품 기준 추가 필요 {suffix}", f"{additional_units:.3f} {suffix}")
     else:
         r2.metric("제품 기준 추가 필요량", "제품 함량 입력 필요")

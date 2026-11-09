@@ -19,6 +19,8 @@ streamlit run app.py --server.address 0.0.0.0 --server.port $PORT
 
 `food_data.json`에 식품명, 상태, EPA, DHA 및 출처 URL을 별도로 관리합니다. 현재는 USDA FoodData Central SR Legacy FDC 175139의 **대서양 정어리·기름 통조림·기름 뺀 고형분·뼈 포함**만 넣었습니다(EPA 473mg, DHA 509mg/100g). 목록에 없는 식품은 추정하지 않고 직접 입력합니다.
 
+피시오일이 5mL 기준으로 표시된 경우에는, 입력한 EPA+DHA 합계를 5로 나누어 실제 mL 기준으로 계산합니다. 예: 5mL당 EPA 900mg + DHA 600mg은 1mL당 300mg입니다.
+
 ## 계산 기준
 
 - 유지 권장량: `30 × 체중(kg)^0.75 mg/day`
